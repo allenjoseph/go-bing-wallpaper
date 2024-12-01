@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"io"
 	"log"
 	"net/http"
@@ -21,7 +22,7 @@ type BingImage struct {
 var Market map[string]string
 
 func main() {
-	market := getMarket(readStdin())
+	market := getMarket()
 	imageData := todayBingImageData(market)
 	imagePath := downloadBingImage(imageData.Url)
 
@@ -30,31 +31,22 @@ func main() {
 	check(err)
 }
 
-func readStdin() string {
-	stdin, err := io.ReadAll(os.Stdin)
-	check(err)
-
-	return strings.TrimSpace(string(stdin))
-}
-
-func getMarket(region string) string {
+func getMarket() string {
 	Market = map[string]string{
-		"cn":     "zh-CN",
 		"us":     "en-US",
+		"es":     "es-ES",
 		"jp":     "ja-JP",
-		"au":     "en-AU",
-		"uk":     "en-GB",
-		"ge":     "de-DE",
-		"nz":     "en-NZ",
-		"ca":     "en-CA",
 		"random": "random",
 	}
 
-	market := Market["random"]
-	if _, ok := Market[region]; ok {
-		market = Market[region]
+	mktFlag := flag.String("mkt", "random", "Market to get the image from")
+	flag.Parse()
+
+	mkt := strings.ToLower(*mktFlag)
+	if _, ok := Market[mkt]; !ok {
+		mkt = "random"
 	}
-	return market
+	return Market[mkt]
 }
 
 func todayBingImageData(market string) BingImage {
